@@ -1,9 +1,11 @@
 module;
-#include <iostream>
 
 export module main;
 
+import Easy.Core.Engine;
+
 int main() {
-    std::cout << "Hello, World!" << std::endl;
+    Easy::Engine e;
+    e.run_test();
     return 0;
 }

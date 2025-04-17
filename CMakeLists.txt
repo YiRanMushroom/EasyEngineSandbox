@@ -16,3 +16,10 @@ target_sources(EasyEngineSandbox
         TYPE CXX_MODULES
         FILES ${MODULES}
 )
+
+add_subdirectory(EasyEngineCore)
+
+target_link_libraries(EasyEngineSandbox
+        PRIVATE
+        EasyEngineCore
+)
