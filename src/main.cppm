@@ -32,7 +32,7 @@ class BackGroundLayer : public Layer {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     }
 
-        virtual void OnImGuiRender() override {
+    virtual void OnImGuiRender() override {
         // Note: Switch this to true to enable dockspace
         static bool dockspaceOpen = true;
         static bool opt_fullscreen_persistant = true;
