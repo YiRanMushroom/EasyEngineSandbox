@@ -7,6 +7,7 @@ export module main;
 import Easy.Core.Basic;
 import Easy.Core.Application;
 import Easy.Core.Layer;
+import Easy.Events.Event;
 
 using namespace Easy;
 
@@ -127,10 +128,17 @@ class BackGroundLayer : public Layer {
     }
 };
 
+class RendererLayer : public Layer {
+    virtual void OnEvent(Event & event) override {
+        std::cout << "RendererLayer::OnEvent: " << event.ToString() << std::endl;
+    }
+};
+
 int main() {
     Arc<Application> app = Arc<Application>{new Application(ApplicationSpecification{"EasyEngineCore"})};
     app->PushLayer(Arc<Layer>{new BackGroundLayer()});
     app->PushLayer(Arc<Layer>{new SimpleImGuiLayer()});
+    app->PushLayer(Arc<Layer>{new RendererLayer()});
     app->Run();
     return 0;
 }
