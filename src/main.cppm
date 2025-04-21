@@ -97,7 +97,12 @@ class RendererLayer : public Layer {
 };
 
 int main() {
-    auto app = MakeArc<Application>(ApplicationSpecification::Make<OpenGLWindow, OpenGLImGuiLayer>("EasyEngineCore"));
+    auto app =
+            ApplicationBuilder::Start()
+            .Window<OpenGLWindow>()
+            .ImGuiLayer<OpenGLImGuiLayer>()
+            .Build();
+
     app->PushLayer(MakeArc<BackGroundLayer>());
     app->PushLayer(MakeArc<SimpleImGuiLayer>());
     app->PushLayer(MakeArc<RendererLayer>());
