@@ -1,5 +1,5 @@
 module;
-#include "imgui.h"
+#include "OpenGL.hpp"
 
 export module main;
 
@@ -10,6 +10,7 @@ import Easy.Events.Event;
 import Easy.ImGui.ImGuiLayer;
 import Easy.Platform.Impl.OpenGL.Window;
 import Easy.Platform.Impl.OpenGL.ImGuiLayer;
+import Easy.ImGui.ImGui;
 
 using namespace Easy;
 
@@ -27,7 +28,6 @@ class SimpleImGuiLayer : public Layer {
         if (showDemoWindow)
             ImGui::ShowDemoWindow(&showDemoWindow);
 
-
         if (showDebugWindow) {
             ImGui::ShowDebugLogWindow(&showDebugWindow);
         }
@@ -39,12 +39,15 @@ class SimpleImGuiLayer : public Layer {
     }
 };
 
-class BackGroundLayer : public ImGuiDockerLayer {
+class BackGroundLayer : public Layer {
     virtual void OnUpdate(float) override {
-        // temporary
         glClearColor(0.6, 0.6, 0.6, 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     }
+};
+
+class ImBackGroundLayer : public ImGuiDockerLayer {
+    bool m_EnableDockerSpace = false;
 
     virtual void OnDockerRenderAdditional() override {
         if (ImGui::BeginMenuBar()) {
@@ -85,12 +88,97 @@ class BackGroundLayer : public ImGuiDockerLayer {
                 ImGui::EndMenu();
             }
 
+            if (ImGui::BeginMenu("Settings")) {
+                if (ImGui::MenuItem("Toggle Docker Space", nullptr)) {
+                    m_EnableDockerSpace = !m_EnableDockerSpace;
+                }
+                ImGui::EndMenu();
+            }
+
             ImGui::EndMenuBar();
+        }
+    }
+
+    bool m_NeedResize = false;
+
+    virtual void OnImGuiRender() override {
+        ImGuiDockerLayer::OnImGuiRender();
+
+        if (m_EnableDockerSpace) {
+            ImGui::Begin("Big Docker Space", &m_EnableDockerSpace);
+            if (m_NeedResize) {
+                ImGui::SetWindowSize(ImVec2(800, 600));
+                m_NeedResize = false;
+            }
+            ImGui::Text("This is a big docker space.");
+            ImGui::Text("You can drag and drop other docker windows here.");
+            ImGui::End();
+        } else {
+            m_NeedResize = false;
         }
     }
 };
 
+
 class RendererLayer : public Layer {
+    static inline const char *vertexShaderSource =
+            "#version 330 core\n"
+            "layout (location = 0) in vec3 aPos;\n"
+            "void main() {\n"
+            "    gl_Position = vec4(aPos, 1.0);\n"
+            "}\0";
+
+    static inline const char *fragmentShaderSource =
+            "#version 330 core\n"
+            "out vec4 FragColor;\n"
+            "void main() {\n"
+            "    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+            "}\0";
+
+    static inline unsigned int shaderProgram, VAO, VBO;
+
+    virtual void OnAttach() override {
+        static float vertices[] = {
+            -0.5f, -0.5f, 0.0f, // 左下
+            0.5f, -0.5f, 0.0f, // 右下
+            0.0f, 0.5f, 0.0f // 顶部
+        };
+
+        glGenVertexArrays(1, &VAO);
+        glGenBuffers(1, &VBO);
+
+        glBindVertexArray(VAO);
+
+        glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *) 0);
+        glEnableVertexAttribArray(0);
+
+        unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
+        glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+        glCompileShader(vertexShader);
+
+        unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+        glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+        glCompileShader(fragmentShader);
+
+        shaderProgram = glCreateProgram();
+        glAttachShader(shaderProgram, vertexShader);
+        glAttachShader(shaderProgram, fragmentShader);
+        glLinkProgram(shaderProgram);
+
+        glDeleteShader(vertexShader);
+        glDeleteShader(fragmentShader);
+    }
+
+    virtual void OnUpdate(float) override {
+        // Draw a triangle
+        glUseProgram(shaderProgram);
+        glBindVertexArray(VAO);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+    }
+
     virtual void OnEvent(Event &event) override {
         std::cout << "RendererLayer::OnEvent: " << event.ToString() << std::endl;
     }
@@ -104,8 +192,10 @@ int main() {
             .Build();
 
     app->PushLayer(MakeArc<BackGroundLayer>());
-    app->PushLayer(MakeArc<SimpleImGuiLayer>());
     app->PushLayer(MakeArc<RendererLayer>());
+    app->PushLayer(MakeArc<ImBackGroundLayer>());
+    app->PushLayer(MakeArc<SimpleImGuiLayer>());
+
     app->Run();
     return 0;
 }
