@@ -8,8 +8,8 @@ import Easy.Core.Application;
 import Easy.Core.Layer;
 import Easy.Events.Event;
 import Easy.ImGui.ImGuiLayer;
-import Easy.Platform.Impl.OpenGLWindow;
-import Easy.Platform.Impl.OpenGLImGuiLayer;
+import Easy.Platform.Impl.OpenGL.Window;
+import Easy.Platform.Impl.OpenGL.ImGuiLayer;
 
 using namespace Easy;
 
