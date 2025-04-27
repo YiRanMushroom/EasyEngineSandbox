@@ -11,6 +11,8 @@ import Easy.ImGui.ImGuiLayer;
 import Easy.Platform.Impl.OpenGL.Window;
 import Easy.Platform.Impl.OpenGL.ImGuiLayer;
 import Easy.ImGui.ImGui;
+import Easy.Renderer.Buffer;
+import Easy.Platform.Impl.OpenGL.Renderer.Buffer;
 
 using namespace Easy;
 
@@ -135,22 +137,34 @@ class RendererLayer : public Layer {
             "    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
             "}\0";
 
-    static inline unsigned int shaderProgram, VAO, VBO;
+    unsigned int shaderProgram, VAO, IBO;
+    Arc<VertexBuffer> vertexBuffer;
 
     virtual void OnAttach() override {
         static float vertices[] = {
-            -0.5f, -0.5f, 0.0f, // 左下
-            0.5f, -0.5f, 0.0f, // 右下
-            0.0f, 0.5f, 0.0f // 顶部
+            -0.5f, -0.5f, 0.0f,
+            0.5f, -0.5f, 0.0f,
+            0.0f, 0.5f, 0.0f
         };
 
         glGenVertexArrays(1, &VAO);
-        glGenBuffers(1, &VBO);
+        // glGenBuffers(1, &VBO);
+
+        glGenBuffers(1, &IBO);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+        static uint32_t indices[] = {
+            0, 1, 2
+        };
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
         glBindVertexArray(VAO);
 
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+        vertexBuffer = MakeArc<OpenGLVertexBuffer>(vertices, sizeof(vertices));
+        vertexBuffer->Bind();
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+
+        // glBindBuffer(GL_ARRAY_BUFFER, VBO);
+        // glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *) 0);
         glEnableVertexAttribArray(0);
@@ -173,10 +187,9 @@ class RendererLayer : public Layer {
     }
 
     virtual void OnUpdate(float) override {
-        // Draw a triangle
         glUseProgram(shaderProgram);
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
     }
 
     virtual void OnEvent(Event &event) override {
