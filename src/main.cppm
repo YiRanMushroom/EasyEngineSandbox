@@ -12,7 +12,9 @@ import Easy.Platform.Impl.OpenGL.Window;
 import Easy.Platform.Impl.OpenGL.ImGuiLayer;
 import Easy.ImGui.ImGui;
 import Easy.Renderer.Buffer;
+import Easy.Renderer.VertexArray;
 import Easy.Platform.Impl.OpenGL.Renderer.Buffer;
+import Easy.Platform.Impl.OpenGL.Renderer.VertexArray;
 
 using namespace Easy;
 
@@ -137,8 +139,8 @@ class RendererLayer : public Layer {
             "    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
             "}\0";
 
-    unsigned int shaderProgram, VAO, IBO;
-    Arc<VertexBuffer> vertexBuffer;
+    unsigned int shaderProgram;
+    Arc<VertexArray> vertexArray;
 
     virtual void OnAttach() override {
         static float vertices[] = {
@@ -147,27 +149,15 @@ class RendererLayer : public Layer {
             0.0f, 0.5f, 0.0f
         };
 
-        glGenVertexArrays(1, &VAO);
-        // glGenBuffers(1, &VBO);
-
-        glGenBuffers(1, &IBO);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
         static uint32_t indices[] = {
             0, 1, 2
         };
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-        glBindVertexArray(VAO);
-
-        vertexBuffer = MakeArc<OpenGLVertexBuffer>(vertices, sizeof(vertices));
-        vertexBuffer->Bind();
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-
-        // glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        // glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *) 0);
-        glEnableVertexAttribArray(0);
+        vertexArray = MakeArc<OpenGLVertexArray>();
+        auto vertexBuffer = MakeArc<OpenGLVertexBuffer>(vertices, sizeof(vertices));
+        vertexBuffer->SetLayout({{ShaderDataType::Float3, "aPos"}});
+        vertexArray->AddVertexBuffer(std::move(vertexBuffer));
+        vertexArray->SetIndexBuffer(MakeArc<OpenGLIndexBuffer>(indices, sizeof(indices)));
 
         unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
         glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
@@ -188,8 +178,8 @@ class RendererLayer : public Layer {
 
     virtual void OnUpdate(float) override {
         glUseProgram(shaderProgram);
-        glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
+        vertexArray->Bind();
+        glDrawElements(GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, 0);
     }
 
     virtual void OnEvent(Event &event) override {
