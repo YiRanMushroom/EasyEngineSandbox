@@ -13,8 +13,10 @@ import Easy.Platform.Impl.OpenGL.ImGuiLayer;
 import Easy.ImGui.ImGui;
 import Easy.Renderer.Buffer;
 import Easy.Renderer.VertexArray;
+import Easy.Renderer.Shader;
 import Easy.Platform.Impl.OpenGL.Renderer.Buffer;
 import Easy.Platform.Impl.OpenGL.Renderer.VertexArray;
+import Easy.Platform.Impl.OpenGL.Renderer.Shader;
 
 using namespace Easy;
 
@@ -126,21 +128,22 @@ class ImBackGroundLayer : public ImGuiDockerLayer {
 
 class RendererLayer : public Layer {
     static inline const char *vertexShaderSource =
-            "#version 330 core\n"
+            "#version 450\n"
             "layout (location = 0) in vec3 aPos;\n"
             "void main() {\n"
             "    gl_Position = vec4(aPos, 1.0);\n"
             "}\0";
 
     static inline const char *fragmentShaderSource =
-            "#version 330 core\n"
-            "out vec4 FragColor;\n"
+            "#version 450\n"
+            "layout(location = 0) out vec4 FragColor;\n"
             "void main() {\n"
             "    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
             "}\0";
 
     unsigned int shaderProgram;
     Arc<VertexArray> vertexArray;
+    Arc<Shader> shader;
 
     virtual void OnAttach() override {
         static float vertices[] = {
@@ -161,25 +164,11 @@ class RendererLayer : public Layer {
         vertexArray->AddVertexBuffer(std::move(vertexBuffer));
         vertexArray->SetIndexBuffer(MakeArc<OpenGLIndexBuffer>(indices, sizeof(indices)));
 
-        unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
-        glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-        glCompileShader(vertexShader);
-
-        unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-        glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-        glCompileShader(fragmentShader);
-
-        shaderProgram = glCreateProgram();
-        glAttachShader(shaderProgram, vertexShader);
-        glAttachShader(shaderProgram, fragmentShader);
-        glLinkProgram(shaderProgram);
-
-        glDeleteShader(vertexShader);
-        glDeleteShader(fragmentShader);
+        shader = MakeArc<OpenGLShader>("Triangle", vertexShaderSource, fragmentShaderSource);
     }
 
     virtual void OnUpdate(float) override {
-        glUseProgram(shaderProgram);
+        shader->Bind();
         vertexArray->Bind();
         glDrawElements(GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, 0);
     }
@@ -195,6 +184,10 @@ int main() {
             .Window<OpenGLWindow>()
             .ImGuiLayer<OpenGLImGuiLayer>()
             .Build();
+
+    std::cout << std::format("OpenGL {}, GLSL {}\n",
+       (char*)glGetString(GL_VERSION),
+       (char*)glGetString(GL_SHADING_LANGUAGE_VERSION)) << std::endl;
 
     app->PushLayer(MakeArc<BackGroundLayer>());
     app->PushLayer(MakeArc<RendererLayer>());
