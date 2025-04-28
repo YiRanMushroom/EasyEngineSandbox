@@ -158,6 +158,8 @@ class RendererLayer : public Layer {
             1, 2, 3
         };
 
+
+
         vertexArray = MakeArc<OpenGLVertexArray>();
         auto vertexBuffer = MakeArc<OpenGLVertexBuffer>(vertices, sizeof(vertices));
         vertexBuffer->SetLayout({{ShaderDataType::Float3, "aPos"}});
