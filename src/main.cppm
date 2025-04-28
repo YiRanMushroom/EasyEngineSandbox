@@ -184,12 +184,10 @@ int main() {
     auto app =
             ApplicationBuilder::Start()
             .Window<OpenGLWindow>()
+            .WindowWidth(1920)
+            .WindowHeight(1080)
             .ImGuiLayer<OpenGLImGuiLayer>()
             .Build();
-
-    std::cout << std::format("OpenGL {}, GLSL {}\n",
-       (char*)glGetString(GL_VERSION),
-       (char*)glGetString(GL_SHADING_LANGUAGE_VERSION)) << std::endl;
 
     app->PushLayer(MakeArc<BackGroundLayer>());
     app->PushLayer(MakeArc<RendererLayer>());
