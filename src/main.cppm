@@ -108,7 +108,7 @@ class ImBackGroundLayer : public ImGuiDockerLayer {
     bool m_NeedResize = false;
 
     virtual void OnImGuiRender() override {
-        ImGuiDockerLayer::OnImGuiRender();
+        // ImGuiDockerLayer::OnImGuiRender();
 
         if (m_EnableDockerSpace) {
             ImGui::Begin("Big Docker Space", &m_EnableDockerSpace);
@@ -141,7 +141,6 @@ class RendererLayer : public Layer {
             "    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
             "}\0";
 
-    unsigned int shaderProgram;
     Arc<VertexArray> vertexArray;
     Arc<Shader> shader;
 
@@ -157,8 +156,6 @@ class RendererLayer : public Layer {
             0, 1, 2,
             1, 2, 3
         };
-
-
 
         vertexArray = MakeArc<OpenGLVertexArray>();
         auto vertexBuffer = MakeArc<OpenGLVertexBuffer>(vertices, sizeof(vertices));
@@ -176,7 +173,6 @@ class RendererLayer : public Layer {
     }
 
     virtual void OnEvent(Event &event) override {
-        std::cout << "RendererLayer::OnEvent: " << event.ToString() << std::endl;
     }
 };
 
