@@ -62,16 +62,22 @@ class RendererLayer : public Layer {
     virtual void OnUpdate(float) override {
         auto size = Application::Get().GetWindow().GetSize();
         float aspectRatio = static_cast<float>(size.first) / static_cast<float>(size.second);
-        auto camera = OrthographicCamera(-aspectRatio, aspectRatio, -1.0f, 1.0f);
+        auto camera = OrthographicCamera(-aspectRatio * 5, aspectRatio * 5, -5.0f, 5.0f);
         static float rotation = 0.0f;
         camera.SetRotation(rotation);
         rotation += 0.5f;
         Renderer2D::BeginScene(camera);
 
+        static float circleRotation = 0.0f;
+
         Renderer2D::DrawRect(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(0.5f, 0.5f), glm::vec4(1.0f, 0.5f, 0.2f, 1.0f));
-        Renderer2D::DrawCircle(glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, 0.5f, 0.0f))
-                               * glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 0.5f, 0.0f)),
+        Renderer2D::DrawCircle(glm::rotate(glm::mat4(1.0f), glm::radians(circleRotation),
+                                           glm::vec3(0.0f, 0.0f, 1.0f))
+                               * glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 0.5f, 0.0f))
+                               * glm::translate(
+                                   glm::mat4(1.0f), glm::vec3(0.5f, 0.5f, 0.0f)),
                                glm::vec4(1.0f, 0.5f, 0.2f, 1.0f));
+        circleRotation += 0.7f;
 
         Renderer2D::EndScene();
     }
