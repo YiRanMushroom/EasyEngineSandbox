@@ -14,11 +14,15 @@ import Easy.ImGui.ImGui;
 import Easy.Renderer.Buffer;
 import Easy.Renderer.VertexArray;
 import Easy.Renderer.Shader;
-import Easy.Platform.Impl.OpenGL.Renderer.Buffer;
-import Easy.Platform.Impl.OpenGL.Renderer.VertexArray;
-import Easy.Platform.Impl.OpenGL.Renderer.Shader;
+import Easy.Renderer.Renderer2D;
+import easy.vendor.glm;
+import Easy.Core.Input;
+import Easy.Renderer.OrthographicCamera;
+// import Easy.Platform.Impl.OpenGL.Renderer.Buffer;
+// import Easy.Platform.Impl.OpenGL.Renderer.VertexArray;
+// import Easy.Platform.Impl.OpenGL.Renderer.Shader;
 
-import Easy.Platform.Impl.OpenGL.Renderer.ShaderSources;
+import Easy.Renderer.ShaderSources;
 
 using namespace Easy;
 
@@ -54,128 +58,25 @@ class BackGroundLayer : public Layer {
     }
 };
 
-/*class ImBackGroundLayer : public ImGuiDockerLayer {
-    bool m_EnableDockerSpace = false;
-
-    virtual void OnDockerRenderAdditional() override {
-        if (ImGui::BeginMenuBar()) {
-            if (ImGui::BeginMenu("File")) {
-                if (ImGui::MenuItem("Open Project...", "Ctrl+O")) {}
-                // OpenProject();
-
-                ImGui::Separator();
-
-                if (ImGui::MenuItem("New Scene", "Ctrl+N")) {}
-                // NewScene();
-
-                if (ImGui::MenuItem("Save Scene", "Ctrl+S")) {}
-                // SaveScene();
-
-                if (ImGui::MenuItem("Save Scene As...", "Ctrl+Shift+S")) {}
-                // SaveSceneAs();
-
-                ImGui::Separator();
-
-                if (ImGui::MenuItem("Exit"))
-                    Application::Get().Close();
-
-                ImGui::EndMenu();
-            }
-
-            if (ImGui::BeginMenu("Script")) {
-                if (ImGui::MenuItem("Reload assembly", "Ctrl+R")) {}
-                // ScriptEngine::ReloadAssembly();
-
-                ImGui::EndMenu();
-            }
-
-            if (ImGui::BeginMenu("Window")) {
-                ImGui::MenuItem("Console", nullptr, &showDebugWindow);
-                ImGui::MenuItem("Demo", nullptr, &showDemoWindow);
-
-                ImGui::EndMenu();
-            }
-
-            if (ImGui::BeginMenu("Settings")) {
-                if (ImGui::MenuItem("Toggle Docker Space", nullptr)) {
-                    m_EnableDockerSpace = !m_EnableDockerSpace;
-                }
-                ImGui::EndMenu();
-            }
-
-            ImGui::EndMenuBar();
-        }
-    }
-
-    bool m_NeedResize = false;
-
-    virtual void OnImGuiRender() override {
-        // ImGuiDockerLayer::OnImGuiRender();
-
-        if (m_EnableDockerSpace) {
-            ImGui::Begin("Big Docker Space", &m_EnableDockerSpace);
-            if (m_NeedResize) {
-                ImGui::SetWindowSize(ImVec2(800, 600));
-                m_NeedResize = false;
-            }
-            ImGui::Text("This is a big docker space.");
-            ImGui::Text("You can drag and drop other docker windows here.");
-            ImGui::End();
-        } else {
-            m_NeedResize = false;
-        }
-    }
-};*/
-
-
 class RendererLayer : public Layer {
-    static inline const char *vertexShaderSource =
-            "#version 450 core\n"
-            "layout (location = 0) in vec3 aPos;\n"
-            "void main() {\n"
-            "    gl_Position = vec4(aPos, 1.0);\n"
-            "}\0";
-
-    static inline const char *fragmentShaderSource =
-            "#version 450 core\n"
-            "layout(location = 0) out vec4 FragColor;\n"
-            "void main() {\n"
-            "    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-            "}\0";
-
-    Arc<VertexArray> vertexArray;
-    Arc<Shader> shader;
-
-    virtual void OnAttach() override {
-        static float vertices[] = {
-            -0.5, 0.5, 0.0f, // top left
-            0.5, 0.5, 0.0f, // top right
-            -0.5, -0.5, 0.0f, // bottom left
-            0.5, -0.5, 0.0f // bottom right
-        };
-
-        static uint32_t indices[] = {
-            0, 1, 2,
-            1, 2, 3
-        };
-
-        vertexArray = MakeArc<OpenGLVertexArray>();
-        auto vertexBuffer = MakeArc<OpenGLVertexBuffer>(vertices, sizeof(vertices));
-        vertexBuffer->SetLayout({{ShaderDataType::Float3, "aPos"}});
-        vertexArray->AddVertexBuffer(std::move(vertexBuffer));
-        vertexArray->SetIndexBuffer(MakeArc<OpenGLIndexBuffer>(indices, sizeof(indices)));
-
-        shader = MakeArc<OpenGLShader>("Triangle", vertexShaderSource, fragmentShaderSource);
-    }
-
     virtual void OnUpdate(float) override {
-        shader->Bind();
-        vertexArray->Bind();
-        glDrawElements(GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, 0);
+        auto size = Application::Get().GetWindow().GetSize();
+        float aspectRatio = static_cast<float>(size.first) / static_cast<float>(size.second);
+        auto camera = OrthographicCamera(-aspectRatio, aspectRatio, -1.0f, 1.0f);
+        static float rotation = 0.0f;
+        camera.SetRotation(rotation);
+        rotation += 0.5f;
+        Renderer2D::BeginScene(camera);
+
+        Renderer2D::DrawRect(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(0.5f, 0.5f), glm::vec4(1.0f, 0.5f, 0.2f, 1.0f));
+        Renderer2D::DrawCircle(glm::translate(glm::mat4(1.0f), glm::vec3(0.5f, 0.5f, 0.0f))
+                               * glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 0.5f, 0.0f)),
+                               glm::vec4(1.0f, 0.5f, 0.2f, 1.0f));
+
+        Renderer2D::EndScene();
     }
 
-    virtual void OnEvent(Event &event) override {
-    }
+    virtual void OnEvent(Event &event) override {}
 };
 
 int main() {
@@ -190,7 +91,6 @@ int main() {
 
     app->PushLayer(MakeArc<BackGroundLayer>());
     app->PushLayer(MakeArc<RendererLayer>());
-    // app->PushLayer(MakeArc<ImBackGroundLayer>());
     app->PushLayer(MakeArc<SimpleImGuiLayer>());
 
     app->Run();
