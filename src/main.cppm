@@ -18,6 +18,8 @@ import Easy.Platform.Impl.OpenGL.Renderer.Buffer;
 import Easy.Platform.Impl.OpenGL.Renderer.VertexArray;
 import Easy.Platform.Impl.OpenGL.Renderer.Shader;
 
+import Easy.Platform.Impl.OpenGL.Renderer.ShaderSources;
+
 using namespace Easy;
 
 static bool showDebugWindow = true;
@@ -52,7 +54,7 @@ class BackGroundLayer : public Layer {
     }
 };
 
-class ImBackGroundLayer : public ImGuiDockerLayer {
+/*class ImBackGroundLayer : public ImGuiDockerLayer {
     bool m_EnableDockerSpace = false;
 
     virtual void OnDockerRenderAdditional() override {
@@ -123,7 +125,7 @@ class ImBackGroundLayer : public ImGuiDockerLayer {
             m_NeedResize = false;
         }
     }
-};
+};*/
 
 
 class RendererLayer : public Layer {
@@ -177,6 +179,7 @@ class RendererLayer : public Layer {
 };
 
 int main() {
+    GLShaderSources::Init();
     auto app =
             ApplicationBuilder::Start()
             .Window<OpenGLWindow>()
@@ -187,7 +190,7 @@ int main() {
 
     app->PushLayer(MakeArc<BackGroundLayer>());
     app->PushLayer(MakeArc<RendererLayer>());
-    app->PushLayer(MakeArc<ImBackGroundLayer>());
+    // app->PushLayer(MakeArc<ImBackGroundLayer>());
     app->PushLayer(MakeArc<SimpleImGuiLayer>());
 
     app->Run();
