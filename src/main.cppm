@@ -33,8 +33,18 @@ class SimpleImGuiLayer : public Layer {
         ImGui::Text("FPS: %.1f", 1.0f / m_DeltaTime);
         ImGui::End();
 
+
+        /*if (g_LastProfileInfos.size() >= 5) {
+            std::cout << "Profile info size: " << g_LastProfileInfos.size() << std::endl;
+            for (const auto &info: g_LastProfileInfos) {
+                char buffer[1024];
+                info.writeTo(buffer);
+                std::cout << buffer << std::endl;
+            }
+        }*/
+
         ImGui::Begin("Profile");
-        for (const auto& info: g_LastProfileInfos) {
+        for (const auto &info: g_LastProfileInfos) {
             char buffer[1024];
             info.writeTo(buffer);
             ImGui::Text("%s", buffer);
@@ -53,6 +63,7 @@ class BackGroundLayer : public Layer {
 
 void ConvertMouseToWorldPos(float mouseX, float mouseY, const glm::mat4 &viewMatrix,
                             const glm::mat4 &projectionMatrix, glm::vec3 &worldPos) {
+    EZ_PROFILE_FUNCTION();
     auto size = Application::Get().GetWindow().GetSize();
     float width = static_cast<float>(size.first);
     float height = static_cast<float>(size.second);
@@ -130,7 +141,6 @@ class RendererLayer : public Layer {
 };
 
 int main() {
-
     auto app =
             ApplicationBuilder::Start()
             .Window<OpenGLWindow>()
