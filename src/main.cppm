@@ -3,26 +3,7 @@ module;
 #include "Core/MacroUtils.hpp"
 export module main;
 
-import Easy.Core.Basic;
-import Easy.Core.Application;
-import Easy.Core.Layer;
-import Easy.Events.Event;
-import Easy.ImGui.ImGuiLayer;
-import Easy.Platform.Impl.OpenGL.Window;
-import Easy.Platform.Impl.OpenGL.ImGuiLayer;
-import Easy.ImGui.ImGui;
-import Easy.Renderer.Buffer;
-import Easy.Renderer.VertexArray;
-import Easy.Renderer.Shader;
-import Easy.Renderer.Renderer2D;
-import easy.vendor.glm;
-import Easy.Core.Input;
-import Easy.Renderer.OrthographicCamera;
-import Easy.Events.MouseEvents;
-import Easy.Renderer.RenderCommand;
-import Easy.Renderer.Renderer;
-
-import Easy.Renderer.ShaderSources;
+import Easy;
 
 using namespace Easy;
 
@@ -66,11 +47,9 @@ void ConvertMouseToWorldPos(float mouseX, float mouseY, const glm::mat4 &viewMat
     float ndcX = (2.0f * mouseX) / width - 1.0f;
     float ndcY = 1.0f - (2.0f * mouseY) / height;
 
-    // 创建近平面和远平面上的点
     glm::vec4 ndcNear = glm::vec4(ndcX, ndcY, -1.0f, 1.0f);
     glm::vec4 ndcFar = glm::vec4(ndcX, ndcY, 1.0f, 1.0f);
 
-    // 转换到世界空间
     glm::mat4 invVP = glm::inverse(projectionMatrix * viewMatrix);
     glm::vec4 worldNear = invVP * ndcNear;
     glm::vec4 worldFar = invVP * ndcFar;
@@ -107,11 +86,11 @@ class RendererLayer : public Layer {
 
         static float circleRotation = 0.0f;
 
-        Renderer2D::DrawRect(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(1.f, .5f), glm::vec4(1.0f, 0.5f, 0.2f, 1.0f));
+        Renderer2D::DrawRect(glm::vec3{}, glm::vec2(1.f, .5f), glm::vec4(1.0f, 0.5f, 0.2f, 1.0f));
         Renderer2D::DrawCircle(glm::rotate(glm::mat4(1.0f), glm::radians(circleRotation),
                                            glm::vec3(0.0f, 0.0f, 1.0f))
                                * glm::translate(
-                                   glm::mat4(1.0f), glm::vec3(0.5f, 0.5f, 0.0f)
+                                   glm::mat4{1.0f}, glm::vec3(0.5f, 0.5f, 0.0f)
                                ) * glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 0.5f, 0.0f)),
                                glm::vec4(1.0f, 0.5f, 0.2f, 1.0f));
 
@@ -137,12 +116,11 @@ class RendererLayer : public Layer {
 };
 
 int main() {
-    GLShaderSources::Init();
     auto app =
             ApplicationBuilder::Start()
             .Window<OpenGLWindow>()
-            .WindowWidth(1920)
-            .WindowHeight(1080)
+            .WindowWidth(960)
+            .WindowHeight(640)
             .ImGuiLayer<OpenGLImGuiLayer>()
             .Build();
 
