@@ -14,10 +14,13 @@ class SimpleImGuiLayer : public Layer {
     float m_DeltaTime = 0.0f;
 
     virtual void OnUpdate(float deltaTime) override {
+        EZ_PROFILE_SCOPE();
         m_DeltaTime = deltaTime;
     }
 
     virtual void OnImGuiRender() override {
+        EZ_PROFILE_FUNCTION();
+
         if (showDemoWindow)
             ImGui::ShowDemoWindow(&showDemoWindow);
 
@@ -29,11 +32,20 @@ class SimpleImGuiLayer : public Layer {
         ImGui::Text("DeltaTime: %.3f", m_DeltaTime);
         ImGui::Text("FPS: %.1f", 1.0f / m_DeltaTime);
         ImGui::End();
+
+        ImGui::Begin("Profile");
+        for (const auto& info: g_LastProfileInfos) {
+            char buffer[1024];
+            info.writeTo(buffer);
+            ImGui::Text("%s", buffer);
+        }
+        ImGui::End();
     }
 };
 
 class BackGroundLayer : public Layer {
     virtual void OnUpdate(float) override {
+        EZ_PROFILE_FUNCTION();
         RenderCommand::SetClearColor({0.6f, 0.6f, 0.6f, 1.0f});
         RenderCommand::Clear();
     }
@@ -73,6 +85,7 @@ class RendererLayer : public Layer {
     glm::mat4 projectionMatrix{};
 
     virtual void OnUpdate(float) override {
+        EZ_PROFILE_FUNCTION();
         auto size = Application::Get().GetWindow().GetSize();
         float aspectRatio = static_cast<float>(size.first) / static_cast<float>(size.second);
         auto camera = OrthographicCamera(-aspectRatio, aspectRatio, -1.0f, 1.0f);
@@ -100,6 +113,7 @@ class RendererLayer : public Layer {
     }
 
     virtual void OnEvent(Event &event) override {
+        EZ_PROFILE_FUNCTION();
         EventDispatcher dispatcher(event);
         dispatcher.Dispatch<MouseButtonPressedEvent>([this](const MouseButtonPressedEvent &e) {
             float mouseX = Input::GetMouseX();
@@ -116,6 +130,7 @@ class RendererLayer : public Layer {
 };
 
 int main() {
+
     auto app =
             ApplicationBuilder::Start()
             .Window<OpenGLWindow>()
