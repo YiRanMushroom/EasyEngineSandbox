@@ -59,7 +59,7 @@ class RendererLayer : public Layer {
         EZ_PROFILE_FUNCTION();
         auto size = Application::Get().GetWindow().GetSize();
         float aspectRatio = static_cast<float>(size.first) / static_cast<float>(size.second);
-        auto camera = OrthographicCamera(-aspectRatio, aspectRatio, -1.0f, 1.0f);
+        auto camera = OrthographicCamera(-aspectRatio * 5, aspectRatio * 5, -1.0f * 5, 1.0f * 5);
         static float rotation = 0.0f;
         camera.SetRotation(rotation);
         rotation += 0.5f;
@@ -70,16 +70,19 @@ class RendererLayer : public Layer {
 
         static float circleRotation = 0.0f;
 
-        Renderer2D::DrawRect(Easy::MakeTransform<Easy::Scale>(1.5, 0.5)
-                             .Then<Translate>(0.5, 0.5)
-                             .GetTransform(), glm::vec4(1.0f, 0.5f, 0.2f, 1.0f));
+        for (size_t i = 0; i < 10000; i++) {
+            Renderer2D::DrawRect(Easy::MakeTransform<Easy::Scale>(1.5, 0.5)
+                                 .Then<Rotate>(i * 1.f, Rotate::Axis::Z)
+                                 .Then<Translate>(i * .001f, i * .001f)
+                                 .GetTransform(), glm::vec4(1.0f, 0.5f, 0.2f, 1.0f));
+        }
 
         Renderer2D::DrawCircle(Easy::MakeTransform<Easy::Scale>(1.5, 0.5)
-                               .Then<Translate>(0.5, 0.5)
+                               // .Then<Translate>(0.5, 0.5)
                                .Then<Rotate>(circleRotation, Rotate::Axis::Z)
                                .GetTransform(), glm::vec4(1.0f, 0.5f, 0.2f, 1.0f));
 
-        circleRotation += 0.7f;
+        // circleRotation += 0.7f;
 
         Renderer2D::EndScene();
     }
